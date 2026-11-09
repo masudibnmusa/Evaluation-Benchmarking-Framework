@@ -54,7 +54,7 @@ jobs:
       MODEL: ${{ inputs.model || vars.EVAL_MODEL || '' }}
       LOG_LEVEL: INFO
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Preflight
         id: preflight
