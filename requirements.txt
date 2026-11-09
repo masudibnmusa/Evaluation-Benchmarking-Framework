@@ -4,7 +4,7 @@ pandas>=2.0.0
 numpy>=1.26.0
 rapidfuzz>=3.0.0
 jsonschema>=4.0.0
-streamlit>=1.35.0
+streamlit>=1.67.0
 pytest>=8.0.0
 # Optional, only for the semantic_similarity scorer:
 # sentence-transformers>=3.0.0
