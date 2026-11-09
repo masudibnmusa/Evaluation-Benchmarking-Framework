@@ -43,7 +43,7 @@ def main() -> None:
         return
 
     run_id = st.sidebar.selectbox("Run", [r["run_id"] for r in reversed(runs)])
-    rater = st.sidebar.text_input("Your name")
+    rater = st.sidebar.text_input("Your name").strip()  # "alice " and "alice" are the same rater
     run = store.load(run_id)
     ratings = load_ratings(run_id)
 
