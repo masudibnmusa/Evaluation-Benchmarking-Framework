@@ -14,6 +14,10 @@ def compare_models(cases: list[TestCase], models: list[str], prompt_template: st
                    scorer: CompositeScorer, base_cfg: ModelConfig | None = None,
                    runner_cfg: RunnerConfig | None = None) -> dict[str, RunRecord]:
     """Run the same test set and prompt across several models."""
+    if not models:
+        raise ValueError("No models given")
+    if len(set(models)) != len(models):
+        raise ValueError(f"Duplicate model names in {models}")
     base_cfg = base_cfg or ModelConfig(name=models[0])
     return {
         name: evaluate(cases, replace(base_cfg, name=name), prompt_template, prompt_version, scorer, runner_cfg)
