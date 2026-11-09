@@ -1,12 +1,28 @@
-# LLM Eval Framework
+<h1 align="center">LLM Eval Framework</h1>
 
-**Measure LLM changes with data, so you don't have to judge them by feel.**
+<p align="center">
+  <strong>Measure LLM changes with data, so you don't have to judge them by feel.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/masudibnmusa/Evaluation-Benchmarking-Framework/actions/workflows/ci.yml"><img src="https://github.com/masudibnmusa/Evaluation-Benchmarking-Framework/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"></a>
+  <a href="#license"><img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT"></a>
+  <a href="#testing"><img src="https://img.shields.io/badge/tested_with-pytest-0A9EDC?logo=pytest&logoColor=white" alt="Tested with pytest"></a>
+  <a href="https://github.com/masudibnmusa/Evaluation-Benchmarking-Framework/commits/main"><img src="https://img.shields.io/github/last-commit/masudibnmusa/Evaluation-Benchmarking-Framework" alt="Last commit"></a>
+</p>
+
+<p align="center">
+  <a href="#configuration"><img src="https://img.shields.io/badge/Anthropic-Claude-D97757?logo=anthropic&logoColor=white" alt="Anthropic Claude"></a>
+  <a href="#dashboard-and-human-review"><img src="https://img.shields.io/badge/Streamlit-dashboard-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit dashboard"></a>
+  <img src="https://img.shields.io/badge/pandas-150458?logo=pandas&logoColor=white" alt="pandas">
+  <img src="https://img.shields.io/badge/NumPy-013243?logo=numpy&logoColor=white" alt="NumPy">
+  <a href="#regression-tracking-and-the-ci-gate"><img src="https://img.shields.io/badge/CI-regression_gate-2088FF?logo=githubactions&logoColor=white" alt="CI regression gate"></a>
+</p>
 
 This toolkit runs a set of test cases through an LLM, scores the answers in several ways, saves every run, and tells you whether a new prompt or model is better, worse, or just noise. It can also fail a CI build when quality drops.
 
 > "I tweaked the prompt and it feels better" → "I tweaked the prompt, mean score went from 0.71 to 0.78, and the 95% confidence interval excludes zero."
-
-![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![Tests](https://img.shields.io/badge/tests-pytest-green)
 
 ---
 
@@ -21,6 +37,7 @@ This toolkit runs a set of test cases through an LLM, scores the answers in seve
 - [CLI reference](#cli-reference)
 - [Comparing models and prompts](#comparing-models-and-prompts)
 - [Regression tracking and the CI gate](#regression-tracking-and-the-ci-gate)
+- [CI/CD](#cicd)
 - [Dashboard and human review](#dashboard-and-human-review)
 - [Using it from Python](#using-it-from-python)
 - [Configuration](#configuration)
@@ -346,26 +363,66 @@ The check **fails** if any of these is true:
 
 Means are calculated only over case ids present in both runs. Because model output is noisy, the gate looks at the aggregate score and the share of regressed cases. One case flipping does not fail it.
 
-### CI
+### Running the gate yourself
 
 ```bash
 python ci/run_eval_suite.py --dataset data/test_sets/my_task.jsonl --prompt prompts/v1.txt
 python ci/gate_on_regression.py --baseline my_task --max-drop 0.02
 ```
 
-These scripts are thin wrappers around `app.main run` and `app.main compare --run latest`, and they take the same options. For example, in GitHub Actions:
+These scripts are thin wrappers around `app.main run` and `app.main compare --run latest`, and they take the same options. In GitHub Actions, the [LLM eval gate workflow](#cicd) runs this for you.
 
-```yaml
-- name: LLM eval gate
-  run: |
-    pip install -r requirements.txt
-    python ci/run_eval_suite.py --dataset data/test_sets/my_task.jsonl --prompt prompts/v1.txt
-    python ci/gate_on_regression.py --baseline my_task
-  env:
-    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+---
+
+## CI/CD
+
+Three GitHub Actions workflows live in [`.github/workflows/`](.github/workflows/):
+
+```mermaid
+flowchart LR
+    push["Push or PR"] --> lint["Lint<br/>ruff"]
+    push --> tests["Tests<br/>Python 3.10 · 3.11 · 3.12"]
+    pr["PR that changes prompts,<br/>datasets, baselines or app/"] --> gate["LLM eval gate<br/>run vs baseline"]
+    gate -- "regression" --> fail["Check fails"]
+    gate -- "no regression" --> pass["Report in job summary<br/>+ results artifact"]
+    tag["Push tag v*.*.*"] --> rtests["Tests"] --> release["GitHub Release<br/>auto-generated notes"]
 ```
 
-Commit the baseline file (`data/baselines/my_task.jsonl`) so CI has something to compare against.
+| Workflow | Trigger | What it does | Secrets |
+|---|---|---|---|
+| [**CI**](.github/workflows/ci.yml) | Every push to `main`, every PR, manual | Lints with `ruff`, runs `pytest` on Python 3.10, 3.11, and 3.12, and checks that the CLI starts | None. The tests never call an API. |
+| [**LLM eval gate**](.github/workflows/eval.yml) | PRs that change `prompts/`, `data/test_sets/`, `data/baselines/`, `app/` or `requirements.txt`, or a manual run | Runs the eval suite against the committed baseline and fails if quality regressed. Adds the Markdown report to the job summary and uploads the report and run JSONL as an artifact (kept 30 days). | `ANTHROPIC_API_KEY` |
+| [**Release**](.github/workflows/release.yml) | Pushing a tag like `v1.2.0` | Re-runs the tests, then publishes a GitHub Release with notes generated from the merged PRs | None (uses the built-in token) |
+
+[Dependabot](.github/dependabot.yml) also opens weekly PRs to update Python packages and GitHub Actions. Each of those PRs goes through CI.
+
+### Setting up the eval gate
+
+1. Add an `ANTHROPIC_API_KEY` secret under **Settings → Secrets and variables → Actions**.
+2. Commit a dataset, a prompt, and a baseline:
+
+   ```bash
+   python -m app.main run --dataset data/test_sets/my_task.jsonl --prompt prompts/v1.txt
+   python -m app.main set-baseline --name my_task
+   git add data/test_sets/my_task.jsonl prompts/v1.txt data/baselines/my_task.jsonl
+   ```
+
+3. Optional: change the defaults with repository **variables** instead of editing the workflow. The variables are `EVAL_DATASET`, `EVAL_PROMPT`, `EVAL_SCORERS`, `EVAL_BASELINE`, and `EVAL_MODEL`. The defaults are `data/test_sets/my_task.jsonl`, `prompts/v1.txt`, `exact_match`, `my_task`, and the default model. Manual runs (**Actions → LLM eval gate → Run workflow**) can override each value.
+4. To block merges on a regression, make **Eval vs baseline** a required status check in branch protection.
+
+If the secret is missing (for example on PRs from forks) or any of the three files is missing, the workflow skips with a notice instead of failing.
+
+**Cost:** every run of the eval gate calls the model once per test case, plus once more per case if you use `llm_judge`. Keep CI datasets small, or narrow the `paths:` filter in `eval.yml`.
+
+### Shipping a change
+
+1. Open a PR. CI and the eval gate run on it.
+2. If the eval gate reports an intended improvement, update the baseline in the same PR (`set-baseline`, then commit `data/baselines/`). Future PRs are then compared against the new quality level.
+3. Merge, then tag a release:
+
+   ```bash
+   git tag v1.0.0 && git push origin v1.0.0
+   ```
 
 ---
 
@@ -475,8 +532,11 @@ app/
 ├── human_eval/                 Streamlit rating UI, Cohen's kappa
 └── utils/logger.py
 ci/                             run_eval_suite.py, gate_on_regression.py
+.github/workflows/              ci.yml (lint + tests), eval.yml (LLM eval gate), release.yml
+.github/dependabot.yml          weekly dependency and Actions updates
 tests/                          pytest suite (scorers, regression detector, edge cases)
 run_eval.sh                     wrapper around `app.main run` with env-var settings
+ruff.toml                       lint rules used by CI
 ```
 
 ---
@@ -496,6 +556,7 @@ run_eval.sh                     wrapper around `app.main run` with env-var setti
 
 ```bash
 pytest            # no API key needed; the tests use fake model clients
+pip install ruff && ruff check .   # the same lint CI runs
 ```
 
 The tests cover the scorers, composite weighting, error handling, dataset loading edge cases, the regression gate including rounding edge cases, and prompt comparison.

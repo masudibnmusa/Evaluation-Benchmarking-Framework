@@ -75,7 +75,8 @@ with tab_compare:
         st.info("Need at least two runs to compare.")
     else:
         other = store.load(st.selectbox("Compare against (A)", others))
-        st.caption(f"Testing whether the selected run (B) differs from A. Dataset match: {other.dataset_hash == run.dataset_hash}")
+        same_dataset = other.dataset_hash == run.dataset_hash
+        st.caption(f"Testing whether the selected run (B) differs from A. Dataset match: {same_dataset}")
         try:
             st.json(asdict(compare_runs(other, run)))
         except ValueError as e:
