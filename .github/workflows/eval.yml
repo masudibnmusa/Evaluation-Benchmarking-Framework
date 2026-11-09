@@ -69,7 +69,7 @@ jobs:
           [ -f "$baseline_file" ] || skip "Baseline not found: $baseline_file (create one with: python -m app.main set-baseline --name $BASELINE)"
           echo "run=true" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: steps.preflight.outputs.run == 'true'
         with:
           python-version: "3.12"
