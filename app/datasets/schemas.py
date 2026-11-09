@@ -18,8 +18,8 @@ class TestCase:
     def from_dict(cls, d: dict) -> "TestCase":
         return cls(
             id=str(d["id"]),
-            input=d["input"],
-            expected=d.get("expected"),
+            input=str(d["input"]),
+            expected=None if d.get("expected") is None else str(d["expected"]),
             criteria=list(d.get("criteria") or []),
             metadata=dict(d.get("metadata") or {}),
         )

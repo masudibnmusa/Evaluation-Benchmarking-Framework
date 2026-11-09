@@ -10,6 +10,8 @@ class CompositeScorer:
     def __init__(self, components: list[tuple[BaseScorer, float]], pass_score: float = 0.5):
         if not components:
             raise ValueError("CompositeScorer needs at least one scorer")
+        if any(w < 0 for _, w in components) or sum(w for _, w in components) <= 0:
+            raise ValueError("Scorer weights must be >= 0 and at least one must be > 0")
         self.components = components
         self.pass_score = pass_score
 
@@ -25,7 +27,10 @@ class CompositeScorer:
         for scorer, weight in self.components:
             if scorer.needs_expected and case.expected is None:
                 continue  # can't apply this scorer to this case
-            r = scorer.score(case, model_output.output)
+            try:
+                r = scorer.score(case, model_output.output)
+            except Exception as exc:  # noqa: BLE001 - one bad case shouldn't sink the whole run
+                r = ScoreResult(scorer.name, 0.0, False, f"scorer error: {type(exc).__name__}: {exc}")
             results.append(r)
             weighted += r.score * weight
             total += weight

@@ -41,6 +41,10 @@ def _make_scorer(name: str, judge_model: str):
         from app.scorers.schema_validator_scorer import SchemaValidatorScorer
         return SchemaValidatorScorer()
     if name in ("semantic", "semantic_similarity"):
+        import importlib.util
+
+        if importlib.util.find_spec("sentence_transformers") is None:
+            raise ValueError("The semantic_similarity scorer needs: pip install sentence-transformers")
         from app.scorers.semantic_similarity_scorer import SemanticSimilarityScorer
         return SemanticSimilarityScorer()
     if name == "llm_judge":
@@ -53,8 +57,14 @@ def build_composite(spec: str, judge_model: str = JUDGE_MODEL, pass_score: float
     """spec examples: 'exact_match'   or   'exact_match:0.5,llm_judge:0.5'"""
     components = []
     for item in spec.split(","):
+        if not item.strip():
+            continue  # tolerate trailing commas / extra spaces
         name, _, weight = item.strip().partition(":")
-        components.append((_make_scorer(name, judge_model), float(weight) if weight else 1.0))
+        try:
+            w = float(weight) if weight.strip() else 1.0
+        except ValueError:
+            raise ValueError(f"Invalid weight {weight!r} for scorer {name!r}") from None
+        components.append((_make_scorer(name.strip(), judge_model), w))
     return CompositeScorer(components, pass_score=pass_score)
 
 
@@ -80,7 +90,7 @@ def summarize(results: list[CaseResult]) -> dict:
         "mean_score": _mean(r.final_score for r in results),
         "pass_rate": _mean(1.0 if r.passed else 0.0 for r in results),
         "n_errors": sum(1 for r in results if r.output.error),
-        "mean_latency_s": _mean(r.output.latency_s for r in results),
+        "mean_latency_s": _mean(r.output.latency_s for r in results if not r.output.error),
         "input_tokens": sum(r.output.input_tokens for r in results),
         "output_tokens": sum(r.output.output_tokens for r in results),
     }

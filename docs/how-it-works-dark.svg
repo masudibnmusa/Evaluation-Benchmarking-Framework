@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1080 384" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="how-it-works-dark-title how-it-works-dark-desc" id="how-it-works-dark-root">
+      <title id="how-it-works-dark-title">How the LLM eval pipeline works</title>
+      <desc id="how-it-works-dark-desc">A dataset and prompt template feed the task runner; scored outputs become a run record that is printed as a Markdown report, checked by the regression gate against a saved baseline, and saved to the results store that the Streamlit dashboard reads.</desc>
+      <defs>
+      <style>#how-it-works-dark-root { font-family: 'Geist', system-ui, sans-serif; color: #f5f5f5; }
+      #how-it-works-dark-root .diagram-container { width: 100%; overflow-x: auto; }</style>
+        <marker id="how-it-works-dark-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#2d3142"/>
+
+      <!-- arrows first -->
+        <path d="M 168,120 H 180 Q 188,120 188,128 V 148 Q 188,156 196,156 H 208" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 168,216 H 180 Q 188,216 188,208 V 188 Q 188,180 196,180 H 208" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 344,168 H 384" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 520,168 H 560" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 696,152 H 708 Q 716,152 716,144 V 80 Q 716,72 724,72 H 736" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 696,168 H 736" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 696,184 H 708 Q 716,184 716,192 V 256 Q 716,264 724,264 H 736" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 872,264 H 912" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#how-it-works-dark-arrow)"/>
+        <path d="M 804,232 V 200" fill="none" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#how-it-works-dark-arrow)"/>
+        <rect x="814" y="210" width="48" height="12" rx="2" fill="#2d3142"/>
+        <text x="838" y="219" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">BASELINE</text>
+      <!-- nodes -->
+        <rect x="32" y="88" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="32" y="88" width="136" height="64" rx="6" fill="#bfc0c0" stroke="#949eb2" stroke-width="1" fill-opacity="0.10"/>
+        <rect x="40" y="96" width="28" height="12" rx="2" fill="none" stroke="#949eb2" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="54" y="105" fill="#949eb2" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">DATA</text>
+        <text x="100" y="126" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Test dataset</text>
+        <text x="100" y="141" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">jsonl · json · csv</text>
+        <rect x="32" y="184" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="32" y="184" width="136" height="64" rx="6" fill="#bfc0c0" stroke="#949eb2" stroke-width="1" fill-opacity="0.10"/>
+        <rect x="40" y="192" width="40" height="12" rx="2" fill="none" stroke="#949eb2" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="60" y="201" fill="#949eb2" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">PROMPT</text>
+        <text x="100" y="222" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Prompt template</text>
+        <text x="100" y="237" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">{input} placeholder</text>
+        <rect x="208" y="136" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="208" y="136" width="136" height="64" rx="6" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <rect x="216" y="144" width="24" height="12" rx="2" fill="none" stroke="#f5f5f5" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="228" y="153" fill="#f5f5f5" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">RUN</text>
+        <text x="276" y="174" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Task runner</text>
+        <text x="276" y="189" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">parallel · retried</text>
+        <rect x="384" y="136" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="384" y="136" width="136" height="64" rx="6" fill="#f08a59" stroke="#f08a59" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="392" y="144" width="36" height="12" rx="2" fill="none" stroke="#f08a59" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="410" y="153" fill="#f08a59" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">SCORE</text>
+        <text x="452" y="174" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Scorers</text>
+        <text x="452" y="189" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">weighted · pass/fail</text>
+        <rect x="560" y="136" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="560" y="136" width="136" height="64" rx="6" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <rect x="568" y="144" width="40" height="12" rx="2" fill="none" stroke="#f5f5f5" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="588" y="153" fill="#f5f5f5" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">RECORD</text>
+        <text x="628" y="174" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Run record</text>
+        <text x="628" y="189" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">summary + per-case</text>
+        <rect x="736" y="40" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="736" y="40" width="136" height="64" rx="6" fill="#f5f5f5" stroke="#f5f5f5" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <rect x="744" y="48" width="24" height="12" rx="2" fill="none" stroke="#f5f5f5" stroke-width="0.8" stroke-opacity="0.22"/>
+        <text x="756" y="57" fill="#949eb2" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">OUT</text>
+        <text x="804" y="78" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Markdown report</text>
+        <text x="804" y="93" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">printed to stdout</text>
+        <rect x="736" y="136" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="736" y="136" width="136" height="64" rx="6" fill="#f08a59" stroke="#f08a59" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="744" y="144" width="20" height="12" rx="2" fill="none" stroke="#f08a59" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="754" y="153" fill="#f08a59" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">CI</text>
+        <text x="804" y="174" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Regression gate</text>
+        <text x="804" y="189" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">vs baseline · exit 1</text>
+        <rect x="736" y="232" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="736" y="232" width="136" height="64" rx="6" fill="#f5f5f5" stroke="#bfc0c0" stroke-width="1" fill-opacity="0.05"/>
+        <rect x="744" y="240" width="36" height="12" rx="2" fill="none" stroke="#bfc0c0" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="762" y="249" fill="#bfc0c0" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+        <text x="804" y="270" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Results store</text>
+        <text x="804" y="285" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">results/&lt;id&gt;.jsonl</text>
+        <rect x="912" y="232" width="136" height="64" rx="6" fill="#2d3142"/>
+        <rect x="912" y="232" width="136" height="64" rx="6" fill="#f5f5f5" stroke="#f5f5f5" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <rect x="920" y="240" width="20" height="12" rx="2" fill="none" stroke="#f5f5f5" stroke-width="0.8" stroke-opacity="0.22"/>
+        <text x="930" y="249" fill="#949eb2" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">UI</text>
+        <text x="980" y="270" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Dashboard</text>
+        <text x="980" y="285" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">Streamlit · ratings</text>
+
+      <!-- legend -->
+        <line x1="32" y1="328" x2="1048" y2="328" stroke="#f5f5f5" stroke-width="0.8" stroke-opacity="0.10"/>
+        <text x="32" y="346" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="32" y="362" width="14" height="10" rx="2" fill="#bfc0c0" stroke="#949eb2" stroke-width="1" fill-opacity="0.10"/>
+        <text x="52" y="370" fill="#bfc0c0" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Input</text>
+        <rect x="100" y="362" width="14" height="10" rx="2" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="120" y="370" fill="#bfc0c0" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Pipeline step</text>
+        <rect x="204" y="362" width="14" height="10" rx="2" fill="#f08a59" stroke="#f08a59" stroke-width="1" fill-opacity="0.08"/>
+        <text x="224" y="370" fill="#bfc0c0" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Focal: scoring and the CI gate</text>
+        <rect x="380" y="362" width="14" height="10" rx="2" fill="#f5f5f5" stroke="#bfc0c0" stroke-width="1" fill-opacity="0.05"/>
+        <text x="400" y="370" fill="#bfc0c0" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Saved run (JSONL)</text>
+        <rect x="500" y="362" width="14" height="10" rx="2" fill="#f5f5f5" stroke="#f5f5f5" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <text x="520" y="370" fill="#bfc0c0" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Output</text>
+        <line x1="572" y1="367" x2="596" y2="367" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#how-it-works-dark-arrow)"/>
+        <text x="604" y="370" fill="#bfc0c0" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Reads saved baseline</text>
+    </svg>

@@ -12,5 +12,8 @@ def compare_prompts(cases: list[TestCase], prompt_specs: list[str], model_cfg: M
     runs = {}
     for spec in prompt_specs:
         template, version = load_prompt(spec)
-        runs[version] = evaluate(cases, model_cfg, template, version, scorer, runner_cfg)
+        label = version if version not in runs else spec
+        if label in runs:
+            raise ValueError(f"Prompt listed twice: {spec}")
+        runs[label] = evaluate(cases, model_cfg, template, version, scorer, runner_cfg)
     return runs

@@ -72,6 +72,11 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _split(value: str) -> list[str]:
+    """'a, b,,c' -> ['a', 'b', 'c']"""
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+
 def _setup(args):
     cases = load_dataset(args.dataset)
     scorer = build_composite(args.scorers, args.judge_model, args.pass_score)
@@ -81,17 +86,19 @@ def _setup(args):
 def cmd_run(args) -> int:
     cases, scorer, runner_cfg = _setup(args)
     template, version = load_prompt(args.prompt)
+    store = ResultsStore()
+    baseline = store.load_baseline(args.baseline) if args.baseline else None
+
     cfg = ModelConfig(name=args.model, temperature=args.temperature, max_tokens=args.max_tokens)
     run = evaluate(cases, cfg, template, version, scorer, runner_cfg)
 
-    store = ResultsStore()
     if not args.no_save:
         log.info("Saved %s", store.save(run))
 
     report, code = None, 0
-    if args.baseline:
+    if baseline is not None:
         report = detect(
-            run, store.load_baseline(args.baseline), args.max_drop, args.case_drop,
+            run, baseline, args.max_drop, args.case_drop,
             args.max_regressed_fraction, require_same_dataset=not args.allow_dataset_change,
         )
         code = 0 if report.passed else 1
@@ -102,7 +109,11 @@ def cmd_run(args) -> int:
 def _print_pair_test(runs: dict) -> None:
     labels = list(runs)
     if len(labels) == 2:
-        r = compare_runs(runs[labels[0]], runs[labels[1]])
+        try:
+            r = compare_runs(runs[labels[0]], runs[labels[1]])
+        except ValueError as e:  # e.g. fewer than 2 cases
+            print(f"\nSignificance test skipped: {e}")
+            return
         print(f"\n{labels[1]} vs {labels[0]}: diff={r.mean_diff:+.3f} "
               f"95% CI [{r.ci_low:+.3f}, {r.ci_high:+.3f}] p={r.p_value:.3f} "
               f"{'(significant)' if r.significant else '(not significant)'}")
@@ -111,7 +122,7 @@ def _print_pair_test(runs: dict) -> None:
 def cmd_compare_models(args) -> int:
     cases, scorer, runner_cfg = _setup(args)
     template, version = load_prompt(args.prompt)
-    runs = compare_models(cases, args.models.split(","), template, version, scorer, runner_cfg=runner_cfg)
+    runs = compare_models(cases, _split(args.models), template, version, scorer, runner_cfg=runner_cfg)
     if not args.no_save:
         store = ResultsStore()
         for run in runs.values():
@@ -123,7 +134,7 @@ def cmd_compare_models(args) -> int:
 
 def cmd_compare_prompts(args) -> int:
     cases, scorer, runner_cfg = _setup(args)
-    runs = compare_prompts(cases, args.prompts.split(","), ModelConfig(name=args.model), scorer, runner_cfg)
+    runs = compare_prompts(cases, _split(args.prompts), ModelConfig(name=args.model), scorer, runner_cfg)
     if not args.no_save:
         store = ResultsStore()
         for run in runs.values():

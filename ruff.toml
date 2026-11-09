@@ -1,0 +1,7 @@
+# Lint config used by CI (`ruff check .`). Catches real errors (pyflakes) and
+# style problems (pycodestyle E) without reformatting the codebase.
+line-length = 130
+target-version = "py310"
+
+[lint]
+select = ["E", "F"]

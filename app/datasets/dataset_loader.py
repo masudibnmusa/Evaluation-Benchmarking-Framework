@@ -17,7 +17,12 @@ def load_dataset(path: str | Path) -> list[TestCase]:
         rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     elif suffix == ".json":
         data = json.loads(path.read_text(encoding="utf-8"))
-        rows = data if isinstance(data, list) else data["cases"]
+        if isinstance(data, list):
+            rows = data
+        elif isinstance(data, dict) and "cases" in data:
+            rows = data["cases"]
+        else:
+            raise ValueError("JSON dataset must be a list of cases or an object with a 'cases' list")
     elif suffix == ".csv":
         with path.open(newline="", encoding="utf-8") as f:
             rows = [_csv_row_to_dict(r) for r in csv.DictReader(f)]
@@ -32,6 +37,9 @@ def load_dataset(path: str | Path) -> list[TestCase]:
 def _csv_row_to_dict(row: dict) -> dict:
     """CSV columns: id, input, expected, criteria (pipe-separated); any other column -> metadata."""
     row = dict(row)
+    missing = {"id", "input"} - set(row)
+    if missing:
+        raise ValueError(f"CSV dataset is missing required column(s): {', '.join(sorted(missing))}")
     return {
         "id": row.pop("id"),
         "input": row.pop("input"),
@@ -46,6 +54,8 @@ def _validate(cases: list[TestCase]) -> None:
         raise ValueError("Dataset is empty")
     seen = set()
     for c in cases:
+        if not c.id:
+            raise ValueError("Found a case with an empty id")
         if c.id in seen:
             raise ValueError(f"Duplicate case id: {c.id}")
         seen.add(c.id)
