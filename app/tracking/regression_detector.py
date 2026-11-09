@@ -6,6 +6,8 @@ from statistics import mean
 from app.config import DEFAULT_CASE_DROP, DEFAULT_MAX_AGGREGATE_DROP, DEFAULT_MAX_REGRESSED_FRACTION
 from app.datasets.schemas import RunRecord
 
+_EPS = 1e-9  # absorb float noise in score differences
+
 
 @dataclass
 class RegressionReport:
@@ -60,19 +62,19 @@ def detect(current: RunRecord, baseline: RunRecord,
     for i in common:
         d = cur[i].final_score - base[i].final_score
         row = {"id": i, "baseline": base[i].final_score, "current": cur[i].final_score, "delta": d}
-        if d <= -case_drop:
+        if d <= -case_drop + _EPS:
             regressed.append(row)
-        elif d >= case_drop:
+        elif d >= case_drop - _EPS:
             improved.append(row)
 
     reasons = []
     dataset_match = current.dataset_hash == baseline.dataset_hash
     if require_same_dataset and not dataset_match:
         reasons.append("dataset hash differs from baseline (scores are not comparable)")
-    if base_mean - cur_mean > max_aggregate_drop:
+    if base_mean - cur_mean > max_aggregate_drop + _EPS:
         reasons.append(f"mean score dropped {base_mean - cur_mean:.3f} (limit {max_aggregate_drop})")
     frac = len(regressed) / len(common)
-    if frac > max_regressed_fraction:
+    if frac > max_regressed_fraction + _EPS:
         reasons.append(f"{frac:.0%} of cases regressed (limit {max_regressed_fraction:.0%})")
 
     return RegressionReport(
