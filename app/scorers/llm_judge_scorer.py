@@ -42,7 +42,7 @@ class LLMJudgeScorer(BaseScorer):
 
     def __init__(self, model: str = JUDGE_MODEL, pass_threshold: float = 0.75, client: LLMClient | None = None):
         self.pass_threshold = pass_threshold  # 0.75 == 4/5 on the judge's scale
-        self.client = client or AnthropicClient(ModelConfig(name=model, temperature=0.0, max_tokens=300))
+        self.client = client or AnthropicClient(ModelConfig(name=model, temperature=0.0, max_tokens=512))
 
     def score(self, case: TestCase, output: str) -> ScoreResult:
         rubric = "\n".join(f"- {c}" for c in (case.criteria or DEFAULT_RUBRIC))
@@ -55,7 +55,7 @@ class LLMJudgeScorer(BaseScorer):
         try:
             text, *_ = self.client.complete(prompt)
             data = _extract_json(text)
-            raw = min(max(int(data["score"]), 1), 5)
+            raw = min(max(int(round(float(data["score"]))), 1), 5)
         except Exception as exc:  # noqa: BLE001
             return self._result(0.0, f"judge error: {exc}")
         return self._result((raw - 1) / 4, f"{raw}/5 - {data.get('reasoning', '')}", self.pass_threshold)

@@ -9,12 +9,14 @@ from app.datasets.schemas import ScoreResult, TestCase
 from app.scorers.base_scorer import BaseScorer
 
 
+_FENCE = re.compile(r"```(?:json)?\s*\n?(.*?)```", re.DOTALL | re.IGNORECASE)
+
+
 def _parse_json(text: str):
     text = text.strip()
-    if text.startswith("```"):  # tolerate ```json fences
-        text = text.strip("`")
-        if text.lower().startswith("json"):
-            text = text[4:]
+    m = _FENCE.search(text)  # tolerate ```json fences, even with text around them
+    if m:
+        text = m.group(1).strip()
     return json.loads(text)
 
 
@@ -29,7 +31,12 @@ class SchemaValidatorScorer(BaseScorer):
         self.max_chars = max_chars
 
     def score(self, case: TestCase, output: str) -> ScoreResult:
-        schema = self.schema or case.metadata.get("schema")
+        schema = self.schema if self.schema is not None else case.metadata.get("schema")
+        if isinstance(schema, str):  # e.g. a schema column in a CSV dataset
+            try:
+                schema = json.loads(schema)
+            except json.JSONDecodeError as e:
+                return self._result(0.0, f"invalid schema in case metadata: {e}", threshold=1.0)
         checks, failures = 0, []
 
         if schema is not None:
@@ -38,6 +45,8 @@ class SchemaValidatorScorer(BaseScorer):
                 jsonschema.validate(_parse_json(output), schema)
             except (json.JSONDecodeError, jsonschema.ValidationError) as e:
                 failures.append(f"schema: {str(e).splitlines()[0]}")
+            except jsonschema.SchemaError as e:
+                failures.append(f"invalid schema: {str(e).splitlines()[0]}")
 
         if self.pattern:
             checks += 1
